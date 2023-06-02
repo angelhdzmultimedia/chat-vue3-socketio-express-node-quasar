@@ -7,22 +7,9 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-
-const messageTypes = ['newMessage', 'joinRoom'] as const
-type MessageType = typeof messageTypes[number]
-
-type MessagePayload = {
-  username: string
-}
-
-type JoinRoomPayload = MessagePayload & {
-  room: string
-}
-
-type NewMessagePayload = MessagePayload &
-  JoinRoomPayload & {
-    text: string
-  }
+import { JoinRoomPayload } from './types/join-room-payload'
+import { MessageType } from './types/message-type'
+import { NewMessagePayload } from './types/new-message-payload'
 
 @WebSocketGateway({
   cors: true,

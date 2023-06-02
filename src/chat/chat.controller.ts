@@ -1,8 +1,6 @@
 import { Controller, Get } from '@nestjs/common'
 import { ChatService } from './chat.service'
-
-const rooms = ['Lobby', 'Geek Zone', 'Staff'] as const
-type Room = typeof rooms[number]
+import { Room, rooms } from './types/room'
 
 @Controller('chat')
 export class ChatController {
