@@ -4,23 +4,41 @@ import { ref, onMounted } from 'vue'
 import { io } from 'socket.io-client'
 import { useRoute } from 'vue-router'
 
-const client = io('ws://localhost:5000')
+const ioSocket = io('ws://localhost:5000')
 const route = useRoute()
 const message = ref('')
 const room = ref(route.query.room ?? 'Lobby')
 const username = ref(route.query.username ?? 'Guest')
 const messages = ref([])
+const messageTypes = ['newMessage', 'joinRoom', 'userJoined', 'broadcast']
+
+const clientSocket = new Proxy(
+  {},
+  {
+    get(target, key) {
+      if (messageTypes.includes(key)) {
+        return {
+          emit: (data) => {
+            ioSocket.emit(key, data)
+          },
+          on: (callback) => ioSocket.on(key, callback),
+        }
+      }
+      throw new Error(`SocketMessageType Error: Message type "${key}" not registered.`)
+    },
+  },
+)
 
 onMounted(async () => {
-  client.emit('joinRoom', { room: room.value, username: username.value })
-  client.on('broadcast', (message) => {
+  clientSocket.joinRoom.emit({ room: room.value, username: username.value })
+  clientSocket.broadcast.on((message) => {
     messages.value.push({
       type: 'message',
       ...message,
     })
   })
 
-  client.on('userJoined', (message) => {
+  clientSocket.userJoined.on((message) => {
     messages.value.push({
       type: 'notify',
       ...message,
@@ -29,7 +47,7 @@ onMounted(async () => {
 })
 
 function send() {
-  client.emit('newMessage', {
+  clientSocket.newMessage.emit({
     username: username.value,
     text: message.value,
     room: room.value,
