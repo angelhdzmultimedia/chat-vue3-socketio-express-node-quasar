@@ -14,7 +14,17 @@ const messages = ref([])
 onMounted(async () => {
   client.emit('joinRoom', { room: room.value, username: username.value })
   client.on('broadcast', (message) => {
-    messages.value.push(message)
+    messages.value.push({
+      type: 'message',
+      ...message,
+    })
+  })
+
+  client.on('userJoined', (message) => {
+    messages.value.push({
+      type: 'notify',
+      ...message,
+    })
   })
 })
 
@@ -39,8 +49,16 @@ function send() {
     </div>
     <q-list dense style="max-height: 350px" class="overflow-scroll bg-grey-4">
       <q-item v-for="message in messages">
-        <span class="text-bold">{{ message.username }}:&nbsp;</span>
-        <span>{{ message.text }}</span>
+        <div v-if="message.type === 'notify'">
+          <span class="text-bold text-grey">
+            <q-icon name="volume_up"></q-icon>
+            {{ message.username }} joined the room.
+          </span>
+        </div>
+        <div v-if="message.type === 'message'">
+          <span class="text-bold">{{ message.username }}:&nbsp;</span>
+          <span>{{ message.text }}</span>
+        </div>
       </q-item>
     </q-list>
     <div class="column">

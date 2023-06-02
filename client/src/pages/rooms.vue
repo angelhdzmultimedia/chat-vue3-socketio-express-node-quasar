@@ -6,7 +6,7 @@ import { useRoute } from 'vue-router'
 const rooms = ref([])
 const route = useRoute()
 onMounted(async () => {
-  const response = await fetch('https://localhost:5000/api/rooms')
+  const response = await fetch('https://localhost:5000/api/chat/rooms')
   const data = await response.json()
 
   rooms.value = data
