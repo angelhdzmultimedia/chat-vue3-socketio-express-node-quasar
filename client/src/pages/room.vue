@@ -10,18 +10,32 @@ const message = ref('')
 const room = ref(route.query.room ?? 'Lobby')
 const username = ref(route.query.username ?? 'Guest')
 const messages = ref([])
-const messageTypes = ['newMessage', 'joinRoom', 'userJoined', 'broadcast']
+const messageTypes = [
+  'newMessage',
+  'joinRoom',
+  'userJoined',
+  'broadcast',
+] as const
+type MessageType = typeof messageTypes[number]
+
+function subscribe(messageType: MessageType, callback) {
+  clientSocket.on(messageType, callback)
+}
+
+function emit<T>(messageType: MessageType, ...args: T[]) {
+  clientSocket.emit(messageType, ...args)
+}
 
 onMounted(async () => {
-  clientSocket.emit('joinRoom', { room: room.value, username: username.value })
-  clientSocket.on('broadcast', (message) => {
+  emit('joinRoom', { room: room.value, username: username.value })
+  subscribe('broadcast', (message) => {
     messages.value.push({
       type: 'message',
       ...message,
     })
   })
 
-  clientSocket.on('userJoined', (message) => {
+  subscribe('userJoined', (message) => {
     messages.value.push({
       type: 'notify',
       ...message,
@@ -30,7 +44,7 @@ onMounted(async () => {
 })
 
 function send() {
-  clientSocket.emit('newMessage', {
+  emit('newMessage', {
     username: username.value,
     text: message.value,
     room: room.value,
