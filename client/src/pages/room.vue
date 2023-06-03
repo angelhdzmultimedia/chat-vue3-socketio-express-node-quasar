@@ -24,7 +24,9 @@ const clientSocket = new Proxy(
           on: (callback) => ioSocket.on(key, callback),
         }
       }
-      throw new Error(`SocketMessageType Error: Message type "${key}" not registered.`)
+      throw new Error(
+        `SocketMessageType Error: Message type "${key}" not registered.`,
+      )
     },
   },
 )
@@ -60,10 +62,11 @@ function send() {
   <main class="column full-width full-height justify-between q-pa-md">
     <div class="column">
       <span
-        >Connected as: <span class="text-bold">{{ username }}</span></span
+        >Connected as:
+        <span class="text-bold text-primary">{{ username }}</span></span
       >
 
-      <span class="text-h4">{{ room }}</span>
+      <span class="text-h4 text-primary">{{ room }}</span>
     </div>
     <q-list dense style="max-height: 350px" class="overflow-scroll bg-grey-4">
       <q-item v-for="message in messages">
@@ -81,7 +84,7 @@ function send() {
     </q-list>
     <div class="column">
       <q-input v-model="message" placeholder="Message"></q-input>
-      <q-btn @click="send" label="Send"></q-btn>
+      <q-btn color="primary" @click="send" label="Send"></q-btn>
     </div>
   </main>
 </template>
