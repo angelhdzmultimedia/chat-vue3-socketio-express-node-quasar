@@ -9,58 +9,7 @@ const route = useRoute()
 const message = ref('')
 const room = ref(route.query.room ?? 'Lobby')
 const username = ref(route.query.username ?? 'Guest')
-const messages = ref([
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-  {
-    text: 'Aaa',
-    type: 'message',
-    username: 'Test',
-  },
-])
+const messages = ref([])
 const messagesList = ref(null)
 const messageTypes = [
   'newMessage',
@@ -79,7 +28,7 @@ function emit<T>(messageType: MessageType, ...args: T[]) {
 }
 
 function updateMessagesList() {
-  const element = messagesList.value?.$el.lastChild?.scrollIntoView({
+  const element = messagesList.value?.$el.lastElementChild?.scrollIntoView({
     behavior: 'smooth',
   })
 }
