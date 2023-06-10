@@ -19,24 +19,19 @@ const messageTypes = [
 ] as const
 type MessageType = typeof messageTypes[number]
 
-const _sounds = {
-
-}
+const _sounds = {}
 
 function addSounds(sounds) {
   for (const key in sounds) {
     const audio = new Audio(sounds[key])
-   audio.autoPlay = false
+    audio.autoPlay = false
     _sounds[key] = {
       url: sounds[key],
       audio,
-      name: key
+      name: key,
     }
-
   }
 }
-
-
 
 function playSound(name: string) {
   _sounds[name].audio.play()
@@ -57,8 +52,9 @@ function updateMessagesList() {
 }
 
 addSounds({
-  broadcast: 'https://cdn.freesound.org/sounds/592/592772-d7edabc2-8571-411b-805b-672e6d859041?filename=592772__sunart1__message-sound.wav',
-  userJoined: 'http://sfxcontent.s3.amazonaws.com/soundfx/DoorBell.mp3'
+  broadcast:
+    'https://cdn.freesound.org/sounds/592/592772-d7edabc2-8571-411b-805b-672e6d859041?filename=592772__sunart1__message-sound.wav',
+  userJoined: 'http://sfxcontent.s3.amazonaws.com/soundfx/DoorBell.mp3',
 })
 
 onMounted(async () => {
@@ -78,7 +74,9 @@ onMounted(async () => {
       ...message,
     })
     setTimeout(updateMessagesList, 150)
-    playSound('userJoined')
+    if (message.username !== username.value) {
+      playSound('userJoined')
+    }
   })
 })
 
