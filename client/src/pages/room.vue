@@ -40,7 +40,7 @@ function updateMessagesList() {
 addSounds({
   broadcast:
     'https://cdn.freesound.org/sounds/592/592772-d7edabc2-8571-411b-805b-672e6d859041?filename=592772__sunart1__message-sound.wav',
-  userJoined: 'http://sfxcontent.s3.amazonaws.com/soundfx/DoorBell.mp3',
+  userJoined: '@assets/sounds/DoorBell.mp3',
   userLeft:
     'https://cdn.freesound.org/sounds/257/257046-d8fee741-cddc-493d-8591-1ce8668a4ef4?filename=257046__jagadamba__running.wav',
 })
@@ -62,7 +62,7 @@ onMounted(async () => {
     messages.value.push({
       type: 'notify',
       ...message,
-      text: `${message.username} joined the room.`
+      text: `${message.username} joined the room.`,
     })
     setTimeout(updateMessagesList, 150)
     if (message.username !== username.value) {
@@ -74,7 +74,7 @@ onMounted(async () => {
     messages.value.push({
       type: 'notify',
       ...message,
-       text: `${message.username} left the room.`
+      text: `${message.username} left the room.`,
     })
     if (message.username !== username.value) {
       playSound('userLeft')
