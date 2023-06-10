@@ -13,23 +13,8 @@ const username = ref(route.query.username ?? 'Guest')
 const messages = ref([])
 const messagesList = ref(null)
 
-const _sounds = {}
 
-function addSounds(sounds) {
-  for (const key in sounds) {
-    const audio = new Audio(sounds[key])
-    audio.autoPlay = false
-    _sounds[key] = {
-      url: sounds[key],
-      audio,
-      name: key,
-    }
-  }
-}
 
-function playSound(name: string) {
-  _sounds[name].audio.play()
-}
 
 function updateMessagesList() {
   const element = messagesList.value?.$el.lastElementChild?.scrollIntoView({
@@ -37,13 +22,7 @@ function updateMessagesList() {
   })
 }
 
-addSounds({
-  broadcast:
-    'https://cdn.freesound.org/sounds/592/592772-d7edabc2-8571-411b-805b-672e6d859041?filename=592772__sunart1__message-sound.wav',
-  userJoined: '@assets/sounds/DoorBell.mp3',
-  userLeft:
-    'https://cdn.freesound.org/sounds/257/257046-d8fee741-cddc-493d-8591-1ce8668a4ef4?filename=257046__jagadamba__running.wav',
-})
+
 
 onMounted(async () => {
   chatStore.emit('joinRoom', { room: room.value, username: username.value })
