@@ -13,6 +13,7 @@ import { MessagePayload } from './types/message-payload'
 import { MessageType } from './types/message-type'
 import { NewMessagePayload } from './types/new-message-payload'
 import { Room, rooms } from './types/room'
+import { RoomAuthPayload } from './types/room-auth-payload.ts'
 
 type User = {
   username: string
@@ -60,18 +61,36 @@ export class ChatGateway implements OnGatewayDisconnect {
     this._users.splice(this._users.indexOf(user), 1)
   }
 
+  @SubscribeMessage<MessageType>('canJoin')
+  public canJoin(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() payload: RoomAuthPayload,
+  ): boolean {
+    const room: Room = rooms.find((item) => item.name === payload.room)
+
+    if (room.isLocked && room.password === payload.password) {
+      return true
+    }
+    return false
+  }
+
   @SubscribeMessage<MessageType>('roomsList')
-  roomsList(
+  public roomsList(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: {},
-  ): { rooms: readonly Room[] } {
+  ): { rooms: Omit<Room, 'password'>[] } {
     Logger.log(`[New Message - roomsList]: ${payload}`)
 
-    return { rooms }
+    return {
+      rooms: rooms.map((item) => ({
+        isLocked: item.isLocked,
+        name: item.name,
+      })),
+    }
   }
 
   @SubscribeMessage<MessageType>('newMessage')
-  newMessage(
+  public newMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: NewMessagePayload,
   ): NewMessagePayload {
@@ -83,7 +102,7 @@ export class ChatGateway implements OnGatewayDisconnect {
   }
 
   @SubscribeMessage<MessageType>('newConnect')
-  newConnect(
+  public newConnect(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: MessagePayload,
   ): MessagePayload {
@@ -98,7 +117,7 @@ export class ChatGateway implements OnGatewayDisconnect {
   }
 
   @SubscribeMessage<MessageType>('joinRoom')
-  joinRoom(
+  public joinRoom(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: JoinRoomPayload,
   ): JoinRoomPayload {

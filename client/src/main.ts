@@ -18,6 +18,7 @@ app.use(router)
 app.use(quasar.Quasar, {
   plugins: {
     Notify: quasar.Notify,
+    Dialog: quasar.Dialog,
   },
 })
 app.mount('#app')

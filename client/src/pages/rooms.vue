@@ -3,9 +3,11 @@ import { router } from '../router'
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useChatStore } from '../stores/chat'
+import { Room } from '../../../src/types/room'
+import { Dialog, Notify } from 'quasar'
 
 const chatStore = useChatStore()
-const rooms = ref([])
+const rooms = ref<Omit<Room, 'password'>[]>([])
 const route = useRoute()
 
 onMounted(async () => {
@@ -18,8 +20,41 @@ onMounted(async () => {
   })
 })
 
-async function joinRoom(room: string) {
-  await router.push(`/room?username=${route.query.username}&room=${room}`)
+async function joinRoom(room: Room) {
+  if (room.isLocked) {
+    return Dialog.create({
+      dark: true,
+      title: 'Password',
+      color: 'primary',
+      message: `Room "${room.name}" is locked. Password?`,
+      prompt: {
+        model: '',
+        type: 'text', // optional
+      },
+      cancel: true,
+      persistent: true,
+    }).onOk(async (password) => {
+      const canJoin: boolean = await chatStore.emit('canJoin', {
+        password,
+        room: room.name,
+      })
+
+      if (canJoin) {
+        await router.push(
+          `/room?username=${route.query.username}&room=${room.name}`,
+        )
+      } else {
+        Notify.create({
+          message: "You don't have permission to join this room.",
+          type: 'negative',
+          title: 'Unauthorized',
+        })
+      }
+    })
+  }
+  return await router.push(
+    `/room?username=${route.query.username}&room=${room.name}`,
+  )
 }
 </script>
 
@@ -37,10 +72,10 @@ async function joinRoom(room: string) {
         <q-item-section>
           <q-btn
             style="height: 60px"
-            color="purple"
+            :color="room.isLocked ? 'purple' : 'primary'"
             @click="joinRoom(room)"
-            :label="room"
-            :icon="room === 'Staff' ? 'lock' : null"
+            :label="room.name"
+            :icon="room.isLocked ? 'lock' : null"
           ></q-btn>
         </q-item-section>
       </q-item>
