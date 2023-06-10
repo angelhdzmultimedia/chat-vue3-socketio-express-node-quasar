@@ -5,6 +5,7 @@ import { useChatStore } from '../stores/chat'
 
 const username = ref('')
 const chatStore = useChatStore()
+
 async function connect() {
   await chatStore.connect(username.value)
   await router.push(`/rooms?username=${username.value}`)

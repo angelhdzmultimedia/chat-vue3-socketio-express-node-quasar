@@ -2,9 +2,11 @@
 import { router } from '../router'
 import { ref, onMounted, nextTick, onUpdated } from 'vue'
 import { useChatStore } from '../stores/chat'
+import { useSoundStore } from '../stores/sound'
 
 import { useRoute } from 'vue-router'
 
+const soundStore = useSoundStore()
 const chatStore = useChatStore()
 const route = useRoute()
 const message = ref('')
@@ -13,16 +15,11 @@ const username = ref(route.query.username ?? 'Guest')
 const messages = ref([])
 const messagesList = ref(null)
 
-
-
-
 function updateMessagesList() {
   const element = messagesList.value?.$el.lastElementChild?.scrollIntoView({
     behavior: 'smooth',
   })
 }
-
-
 
 onMounted(async () => {
   chatStore.emit('joinRoom', { room: room.value, username: username.value })
@@ -33,7 +30,7 @@ onMounted(async () => {
     })
     setTimeout(updateMessagesList, 150)
     if (message.username !== username.value) {
-      playSound('broadcast')
+      soundStore.play('broadcast')
     }
   })
 
@@ -45,7 +42,7 @@ onMounted(async () => {
     })
     setTimeout(updateMessagesList, 150)
     if (message.username !== username.value) {
-      playSound('userJoined')
+      soundStore.play('userJoined')
     }
   })
 
@@ -56,7 +53,7 @@ onMounted(async () => {
       text: `${message.username} left the room.`,
     })
     if (message.username !== username.value) {
-      playSound('userLeft')
+      soundStore.play('userLeft')
     }
   })
 })
