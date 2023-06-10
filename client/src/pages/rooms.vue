@@ -24,6 +24,11 @@ async function joinRoom(room: string) {
       <span class="text-bold">{{ $route.query.username }}</span></span
     >
     <span class="text-h4">Rooms</span>
-    <q-btn @click="joinRoom(room)" v-for="room in rooms" :label="room"></q-btn>
+    <q-btn
+      color="purple"
+      @click="joinRoom(room)"
+      v-for="room in rooms"
+      :label="room"
+    ></q-btn>
   </main>
 </template>

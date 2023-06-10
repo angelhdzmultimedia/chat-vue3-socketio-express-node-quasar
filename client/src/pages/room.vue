@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '../router'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick, onUpdated } from 'vue'
 import { io } from 'socket.io-client'
 import { useRoute } from 'vue-router'
 
@@ -9,7 +9,59 @@ const route = useRoute()
 const message = ref('')
 const room = ref(route.query.room ?? 'Lobby')
 const username = ref(route.query.username ?? 'Guest')
-const messages = ref([])
+const messages = ref([
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+  {
+    text: 'Aaa',
+    type: 'message',
+    username: 'Test',
+  },
+])
+const messagesList = ref(null)
 const messageTypes = [
   'newMessage',
   'joinRoom',
@@ -26,6 +78,12 @@ function emit<T>(messageType: MessageType, ...args: T[]) {
   clientSocket.emit(messageType, ...args)
 }
 
+function updateMessagesList() {
+  const element = messagesList.value?.$el.lastChild?.scrollIntoView({
+    behavior: 'smooth',
+  })
+}
+
 onMounted(async () => {
   emit('joinRoom', { room: room.value, username: username.value })
   subscribe('broadcast', (message) => {
@@ -33,6 +91,7 @@ onMounted(async () => {
       type: 'message',
       ...message,
     })
+    setTimeout(updateMessagesList, 150)
   })
 
   subscribe('userJoined', (message) => {
@@ -40,6 +99,7 @@ onMounted(async () => {
       type: 'notify',
       ...message,
     })
+    setTimeout(updateMessagesList, 150)
   })
 })
 
@@ -63,8 +123,13 @@ function send() {
 
       <span class="text-h4 text-primary">{{ room }}</span>
     </div>
-    <q-list dense style="max-height: 350px" class="overflow-scroll bg-grey-4">
-      <q-item v-for="message in messages">
+    <q-list
+      ref="messagesList"
+      dense
+      style="max-height: 350px; height:  350px; full-width"
+      class="overflow-auto bg-grey-4"
+    >
+      <q-item v-for="(message, index) in messages" :key="index">
         <div v-if="message.type === 'notify'">
           <span class="text-bold text-grey">
             <q-icon name="volume_up"></q-icon>
@@ -72,8 +137,10 @@ function send() {
           </span>
         </div>
         <div v-if="message.type === 'message'">
-          <span class="text-bold">{{ message.username }}:&nbsp;</span>
-          <span>{{ message.text }}</span>
+          <span class="text-bold text-primary"
+            >{{ message.username }}:&nbsp;</span
+          >
+          <span class="text-black">{{ message.text }}</span>
         </div>
       </q-item>
     </q-list>
