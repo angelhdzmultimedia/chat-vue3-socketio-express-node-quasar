@@ -8,7 +8,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   app.setGlobalPrefix('api')
   app.enableCors({
-    origin: ['https://localhost:3000', 'https://localhost:5000'],
+    origin: [
+      'https://localhost:3000',
+      'https://localhost:5000',
+      'https://stackblitzstartersniszps-zydv--3000--e7ff9e2a.local-credentialless.webcontainer.io',
+    ],
     methods: ['GET', 'POST'],
   })
   await app.listen(5000, () => {})
