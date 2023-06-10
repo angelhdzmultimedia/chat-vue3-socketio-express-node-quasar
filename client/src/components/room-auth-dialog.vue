@@ -33,7 +33,7 @@ function onOKClick() {
         Room is locked. Password?
       </q-card-section>
       <q-card-section>
-        <q-input v-model="password" type="password"></q-input>
+        <q-input color="purple" v-model="password" type="password"></q-input>
       </q-card-section>
       <!-- buttons example -->
       <q-card-actions align="right">
