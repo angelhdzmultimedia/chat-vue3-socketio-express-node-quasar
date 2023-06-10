@@ -13,9 +13,9 @@ async function connect() {
 </script>
 
 <template>
-  <main>
+  <main class="column q-pa-lg q-gutter-y-md">
     <span class="text-h4">Welcome</span>
-    <q-input v-model="username" placeholder="Username" filled></q-input>
+    <q-input v-model="username" label="Username" filled></q-input>
     <q-btn @click="connect" color="primary" label="Connect"></q-btn>
   </main>
 </template>

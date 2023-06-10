@@ -18,17 +18,26 @@ async function joinRoom(room: string) {
 </script>
 
 <template>
-  <main class="column">
+  <main class="column q-pa-lg">
     <span
       >Connected as:
-      <span class="text-bold">{{ $route.query.username }}</span></span
+      <span class="text-bold text-primary">{{
+        $route.query.username
+      }}</span></span
     >
     <span class="text-h4">Rooms</span>
-    <q-btn
-      color="purple"
-      @click="joinRoom(room)"
-      v-for="room in rooms"
-      :label="room"
-    ></q-btn>
+    <q-list dense class="q-gutter-y-xs">
+      <q-item class="column" v-for="(room, index) in rooms" :key="index">
+        <q-item-section>
+          <q-btn
+            style="height: 60px"
+            color="purple"
+            @click="joinRoom(room)"
+            :label="room"
+            :icon="room === 'Staff' ? 'lock' : null"
+          ></q-btn>
+        </q-item-section>
+      </q-item>
+    </q-list>
   </main>
 </template>

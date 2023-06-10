@@ -69,8 +69,8 @@ function send() {
 </script>
 
 <template>
-  <main class="column full-width full-height justify-between q-pa-md">
-    <div class="column">
+  <main class="column full-width full-height justify-between q-pa-lg">
+    <div class="column q-gutter-y-sm">
       <span
         >Connected as:
         <span class="text-bold text-primary">{{ username }}</span></span
@@ -99,8 +99,8 @@ function send() {
         </div>
       </q-item>
     </q-list>
-    <div class="column">
-      <q-input v-model="message" placeholder="Message"></q-input>
+    <div class="column q-pb-md">
+      <q-input v-model="message" label="Message"></q-input>
       <q-btn color="primary" @click="send" label="Send"></q-btn>
     </div>
   </main>
