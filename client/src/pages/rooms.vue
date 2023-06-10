@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { useChatStore } from '../stores/chat'
 import { Room } from '../../../src/types/room'
 import { Dialog, Notify } from 'quasar'
+import RoomAuthDialog from '@/components/room-auth-dialog.vue'
 
 const chatStore = useChatStore()
 const rooms = ref<Omit<Room, 'password'>[]>([])
@@ -23,33 +24,30 @@ onMounted(async () => {
 async function joinRoom(room: Room) {
   if (room.isLocked) {
     return Dialog.create({
-      dark: true,
-      title: 'Password',
-      color: 'primary',
-      message: `Room "${room.name}" is locked. Password?`,
-      prompt: {
-        model: '',
-        type: 'text', // optional
-      },
+      component: RoomAuthDialog,
       cancel: true,
       persistent: true,
     }).onOk(async (password) => {
-      const canJoin: boolean = await chatStore.emit('canJoin', {
-        password,
-        roomName: room.name,
-      })
-
-      if (canJoin) {
-        await router.push(
-          `/room?username=${route.query.username}&room=${room.name}`,
-        )
-      } else {
-        Notify.create({
-          message: "You don't have permission to join this room.",
-          type: 'negative',
-          title: 'Unauthorized',
-        })
-      }
+      chatStore.emit(
+        'canJoin',
+        {
+          password,
+          roomName: room.name,
+        },
+        async (canJoin) => {
+          if (canJoin) {
+            await router.push(
+              `/room?username=${route.query.username}&room=${room.name}`,
+            )
+          } else {
+            Notify.create({
+              message: "You don't have permission to join this room.",
+              type: 'negative',
+              title: 'Unauthorized',
+            })
+          }
+        },
+      )
     })
   }
   return await router.push(
