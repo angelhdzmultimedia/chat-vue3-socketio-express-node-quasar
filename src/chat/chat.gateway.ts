@@ -12,6 +12,7 @@ import { JoinRoomPayload } from './types/join-room-payload'
 import { MessagePayload } from './types/message-payload'
 import { MessageType } from './types/message-type'
 import { NewMessagePayload } from './types/new-message-payload'
+import { Room, rooms } from './types/room'
 
 type User = {
   username: string
@@ -57,6 +58,16 @@ export class ChatGateway implements OnGatewayDisconnect {
     }
     // Eliminar usuario del array de usuarios
     this._users.splice(this._users.indexOf(user), 1)
+  }
+
+  @SubscribeMessage<MessageType>('roomsList')
+  roomsList(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() payload: {},
+  ): { rooms: readonly Room[] } {
+    Logger.log(`[New Message - roomsList]: ${payload}`)
+
+    return { rooms }
   }
 
   @SubscribeMessage<MessageType>('newMessage')

@@ -2,14 +2,20 @@
 import { router } from '../router'
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useChatStore } from '../stores/chat'
 
+const chatStore = useChatStore()
 const rooms = ref([])
 const route = useRoute()
-onMounted(async () => {
-  const response = await fetch('https://localhost:5000/api/chat/rooms')
-  const data = await response.json()
 
-  rooms.value = data
+onMounted(async () => {
+  //const response = await fetch('https://localhost:5000/api/chat/rooms')
+  //const data = await response.json()
+  chatStore.emit('roomsList', {}, (message) => {
+    rooms.value = message.rooms
+  })
+
+ // rooms.value = data
 })
 
 async function joinRoom(room: string) {
