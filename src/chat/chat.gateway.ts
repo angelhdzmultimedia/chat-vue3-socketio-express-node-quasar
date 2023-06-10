@@ -27,12 +27,12 @@ export class ChatGateway implements OnGatewayDisconnect {
   public server: Server
   private _users: User[] = []
 
-  private _findUser(socket: Socket): User {
-    return this._users.find((item) => item.id === socket.id)
+  private _findUserById(id: string): User {
+    return this._users.find((item) => item.id === id)
   }
 
   handleDisconnect(socket: Socket) {
-    const user = this._findUser(socket)
+    const user = this._findUserById(socket.id)
 
     if (!user) {
       return
@@ -64,19 +64,21 @@ export class ChatGateway implements OnGatewayDisconnect {
   ): NewMessagePayload {
     Logger.log(`[New Message - newMessage]: ${payload}`)
     Logger.log(`[ Rooms ]: ${socket.rooms}`)
+    // Emitir evento "broadcast" a los sockets cliente que estan en la sala
     this.server.to(payload.room).emit('broadcast', payload)
     return payload
   }
 
-  @SubscribeMessage<MessageType>('connect')
-  connect(
+  @SubscribeMessage<MessageType>('newConnect')
+  newConnect(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: MessagePayload,
   ): MessagePayload {
-    Logger.log(`[New Message - connect]: ${payload}`)
+    Logger.log(`[New Message - newConnect]: ${payload}`)
+    // Guardar nuevo usuario en array de usuarios
     this._users.push({
       username: payload.username,
-      id: socket.id,
+      id: socket.id, // ID del socket
       rooms: [],
     })
     return payload
@@ -89,8 +91,11 @@ export class ChatGateway implements OnGatewayDisconnect {
   ): JoinRoomPayload {
     Logger.log(`[New Message - joinRoom]: ${payload}`)
     socket.join(payload.room)
+    // Emitir evento "userJoined" a los sockets cliente que estan en la sala
     this.server.to(payload.room).emit('userJoined', payload)
-    const user = this._findUser(socket)
+    // Buscar un usuario por su id del socket
+    const user = this._findUserById(socket.id)
+    // Añador la sala al array de rooms del usuario
     user.rooms.push(payload.room)
     return payload
   }
