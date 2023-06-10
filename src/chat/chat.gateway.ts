@@ -8,12 +8,12 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { JoinRoomPayload } from './types/join-room-payload'
-import { MessagePayload } from './types/message-payload'
+import { JoinRoomPayload } from './types/join-room.payload'
+import { MessagePayload } from './types/message.payload'
 import { MessageType } from './types/message-type'
-import { NewMessagePayload } from './types/new-message-payload'
+import { NewMessagePayload } from './types/new-message.payload'
 import { Room, rooms } from './types/room'
-import { RoomAuthPayload } from './types/room-auth-payload.ts'
+import { RoomAuthPayload } from './types/room-auth.payload'
 
 type User = {
   username: string
@@ -66,7 +66,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: RoomAuthPayload,
   ): boolean {
-    const room: Room = rooms.find((item) => item.name === payload.room)
+    const room: Room = rooms.find((item) => item.name === payload.roomName)
 
     if (room.isLocked && room.password === payload.password) {
       return true

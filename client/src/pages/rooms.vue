@@ -36,7 +36,7 @@ async function joinRoom(room: Room) {
     }).onOk(async (password) => {
       const canJoin: boolean = await chatStore.emit('canJoin', {
         password,
-        room: room.name,
+        roomName: room.name,
       })
 
       if (canJoin) {
