@@ -1,23 +1,17 @@
 <script setup lang="ts">
 import { router } from '../router'
 import { ref, onMounted, nextTick, onUpdated } from 'vue'
-import { io } from 'socket.io-client'
+import { useChatStore } from '../stores/chat'
+
 import { useRoute } from 'vue-router'
 
-const clientSocket = io('ws://localhost:5000')
+const chatStore = useChatStore()
 const route = useRoute()
 const message = ref('')
 const room = ref(route.query.room ?? 'Lobby')
 const username = ref(route.query.username ?? 'Guest')
 const messages = ref([])
 const messagesList = ref(null)
-const messageTypes = [
-  'newMessage',
-  'joinRoom',
-  'userJoined',
-  'broadcast',
-] as const
-type MessageType = typeof messageTypes[number]
 
 const _sounds = {}
 
@@ -37,14 +31,6 @@ function playSound(name: string) {
   _sounds[name].audio.play()
 }
 
-function subscribe(messageType: MessageType, callback) {
-  clientSocket.on(messageType, callback)
-}
-
-function emit<T>(messageType: MessageType, ...args: T[]) {
-  clientSocket.emit(messageType, ...args)
-}
-
 function updateMessagesList() {
   const element = messagesList.value?.$el.lastElementChild?.scrollIntoView({
     behavior: 'smooth',
@@ -55,11 +41,13 @@ addSounds({
   broadcast:
     'https://cdn.freesound.org/sounds/592/592772-d7edabc2-8571-411b-805b-672e6d859041?filename=592772__sunart1__message-sound.wav',
   userJoined: 'http://sfxcontent.s3.amazonaws.com/soundfx/DoorBell.mp3',
+  userLeft:
+    'https://cdn.freesound.org/sounds/257/257046-d8fee741-cddc-493d-8591-1ce8668a4ef4?filename=257046__jagadamba__running.wav',
 })
 
 onMounted(async () => {
-  emit('joinRoom', { room: room.value, username: username.value })
-  subscribe('broadcast', (message) => {
+  chatStore.emit('joinRoom', { room: room.value, username: username.value })
+  chatStore.subscribe('broadcast', (message) => {
     messages.value.push({
       type: 'message',
       ...message,
@@ -70,20 +58,32 @@ onMounted(async () => {
     }
   })
 
-  subscribe('userJoined', (message) => {
+  chatStore.subscribe('userJoined', (message) => {
     messages.value.push({
       type: 'notify',
       ...message,
+      text: `${message.username} joined the room.`
     })
     setTimeout(updateMessagesList, 150)
     if (message.username !== username.value) {
       playSound('userJoined')
     }
   })
+
+  chatStore.subscribe('userLeft', (message) => {
+    messages.value.push({
+      type: 'notify',
+      ...message,
+       text: `${message.username} left the room.`
+    })
+    if (message.username !== username.value) {
+      playSound('userLeft')
+    }
+  })
 })
 
 function send() {
-  emit('newMessage', {
+  chatStore.emit('newMessage', {
     username: username.value,
     text: message.value,
     room: room.value,
@@ -112,7 +112,7 @@ function send() {
         <div v-if="message.type === 'notify'">
           <span class="text-bold text-grey">
             <q-icon name="volume_up"></q-icon>
-            {{ message.username }} joined the room.
+            {{ message.text }}
           </span>
         </div>
         <div v-if="message.type === 'message'">
