@@ -5,6 +5,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
 import { JoinRoomPayload } from './types/join-room-payload'
@@ -14,17 +15,47 @@ import { NewMessagePayload } from './types/new-message-payload'
 
 type User = {
   username: string
-  socket: Socket
+  id: string
+  rooms: string[]
 }
 
 @WebSocketGateway({
   cors: true,
 })
-export class ChatGateway {
+export class ChatGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   public server: Server
-
   private _users: User[] = []
+
+  private _findUser(socket: Socket): User {
+    return this._users.find((item) => item.id === socket.id)
+  }
+
+  handleDisconnect(socket: Socket) {
+    const user = this._findUser(socket)
+
+    if (!user) {
+      return
+    }
+
+    const payload: MessagePayload = {
+      username: user.username,
+    }
+
+    // Iterar por los rooms del usuario
+    for (const room of user.rooms) {
+      // Emitir evento usuario salio de room
+      this.server.to(room).emit('userLeft', payload)
+      // Salir del room si usuario esta en room
+      if (socket.in(room)) {
+        socket.leave(room)
+      }
+      // Eliminar room del array de rooms del usuario
+      user.rooms.splice(user.rooms.indexOf(room), 1)
+    }
+    // Eliminar usuario del array de usuarios
+    this._users.splice(this._users.indexOf(user), 1)
+  }
 
   @SubscribeMessage<MessageType>('newMessage')
   newMessage(
@@ -37,22 +68,6 @@ export class ChatGateway {
     return payload
   }
 
-  @SubscribeMessage<MessageType>('disconnected')
-  disconnected(@ConnectedSocket() socket: Socket): MessagePayload {
-    Logger.log(`[New Message - disconnected]: ${null}`)
-    const user = this._users.find((item) => item.socket.id === socket.id)
-    if (!user) {
-      return
-    }
-
-    const payload: MessagePayload = {
-      username: user.username,
-    }
-    this._users.splice(this._users.indexOf(user), 1)
-    this.server.to(socket.rooms).emit('userLeft', payload)
-    return payload
-  }
-
   @SubscribeMessage<MessageType>('connect')
   connect(
     @ConnectedSocket() socket: Socket,
@@ -61,7 +76,8 @@ export class ChatGateway {
     Logger.log(`[New Message - connect]: ${payload}`)
     this._users.push({
       username: payload.username,
-      socket,
+      id: socket.id,
+      rooms: [],
     })
     return payload
   }
@@ -74,6 +90,8 @@ export class ChatGateway {
     Logger.log(`[New Message - joinRoom]: ${payload}`)
     socket.join(payload.room)
     this.server.to(payload.room).emit('userJoined', payload)
+    const user = this._findUser(socket)
+    user.rooms.push(payload.room)
     return payload
   }
 }
