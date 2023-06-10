@@ -65,7 +65,9 @@ onMounted(async () => {
       ...message,
     })
     setTimeout(updateMessagesList, 150)
-    playSound('broadcast')
+    if (message.username !== username.value) {
+      playSound('broadcast')
+    }
   })
 
   subscribe('userJoined', (message) => {
