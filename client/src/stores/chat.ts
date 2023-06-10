@@ -7,7 +7,7 @@ const messageTypes = [
   'joinRoom',
   'userJoined',
   'broadcast',
-  'connect',
+  'newConnect',
 ] as const
 type MessageType = typeof messageTypes[number]
 
@@ -15,7 +15,7 @@ export const useChatStore = defineStore('chat', () => {
   const chat = ref(io('ws://localhost:5000'))
 
   function connect(username: string) {
-    emit('connect', { username })
+    emit('newConnect', { username })
   }
 
   function emit(event: MessageType, ...args: any[]) {

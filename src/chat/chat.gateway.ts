@@ -31,6 +31,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     return this._users.find((item) => item.id === id)
   }
 
+  // Evento cuando un socket se desconecta por cualquier razon
   handleDisconnect(socket: Socket) {
     const user = this._findUserById(socket.id)
 
@@ -38,6 +39,7 @@ export class ChatGateway implements OnGatewayDisconnect {
       return
     }
 
+    // Crear nuevo payload
     const payload: MessagePayload = {
       username: user.username,
     }
@@ -75,7 +77,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     @MessageBody() payload: MessagePayload,
   ): MessagePayload {
     Logger.log(`[New Message - newConnect]: ${payload}`)
-    // Guardar nuevo usuario en array de usuarios
+    // Añadir nuevo usuario en array de usuarios
     this._users.push({
       username: payload.username,
       id: socket.id, // ID del socket
@@ -95,7 +97,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     this.server.to(payload.room).emit('userJoined', payload)
     // Buscar un usuario por su id del socket
     const user = this._findUserById(socket.id)
-    // Añador la sala al array de rooms del usuario
+    // Añadir la sala al array de rooms del usuario
     user.rooms.push(payload.room)
     return payload
   }
