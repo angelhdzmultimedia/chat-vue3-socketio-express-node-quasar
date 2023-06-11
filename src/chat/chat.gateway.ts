@@ -33,17 +33,18 @@ export class ChatGateway implements OnGatewayDisconnect {
     return this._users.find((item) => item.name === name)
   }
 
-  private _findSocketById(id: string): Socket | undefined {
-    const sockets = this.server.sockets.sockets
-    const _sockets: Socket[] = []
+  private async _findSocketById(
+    id: string,
+    room: string,
+  ): Promise<Socket | undefined> {
+    const sockets = await this.server.in(room).fetchSockets()
 
-    for (const key in sockets) {
-      if (sockets.hasOwnProperty(key)) {
-        const socket: Socket = sockets[key]
-        _sockets.push(socket)
+    for (const socket of sockets) {
+      if (socket.id === id) {
+        return socket as unknown as Socket
       }
     }
-    return _sockets.find((item) => item.id === id)
+    return undefined
   }
 
   private _userLeft(socket: Socket) {
@@ -122,19 +123,21 @@ export class ChatGateway implements OnGatewayDisconnect {
   }
 
   @SubscribeMessage<MessageType>('newPrivateMessage')
-  public newPrivateMessage(
+  public async newPrivateMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: NewPrivateMessagePayload,
   ) {
+    Logger.log(`[ New Message - private ] ${JSON.stringify(payload)}`)
     const user = this._findUserByName(payload.receiver)
+    Logger.log(`[User] ${JSON.stringify(user)}`)
     if (!user) {
       return
     }
-    const receiverSocket = this._findSocketById(user.id)
+    const receiverSocket = await this._findSocketById(user.id, payload.room)
     if (!receiverSocket) {
       return
     }
-    Logger.log(`[ New Message - private ] ${JSON.stringify(payload)}`)
+
     Logger.log(`[Socket] ${receiverSocket}`)
     // receiverSocket.to(payload.room).emit('newPrivateMessage', payload)
   }
