@@ -12,15 +12,11 @@ const rooms = ref<Omit<Room, 'password'>[]>([])
 const route = useRoute()
 
 onMounted(async () => {
-  //const response = await fetch('https://localhost:5000/api/chat/rooms')
-  //const data = await response.json()
-  // rooms.value = data
-
-  chatStore.getRooms()
+  await chatStore.getRooms()
 })
 
 async function joinRoom(room: Room) {
-  //  await chatStore.joinRoom(room.name)
+  await chatStore.setRoom(room.name)
   await router.push(`/room/${room.name}`)
 }
 

@@ -75,9 +75,9 @@ export class ChatGateway implements OnGatewayDisconnect {
   public getUsers(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: {},
-  ) {
+  ): { users: User[] } {
     Logger.log(`[New Message - getUsers]: ${payload}`)
-    return this._users
+    return { users: this._users }
   }
 
   @SubscribeMessage<MessageType>('getRooms')
@@ -148,4 +148,3 @@ export class ChatGateway implements OnGatewayDisconnect {
     }
   }
 }
-//

@@ -8,7 +8,7 @@ const chatStore = useChatStore()
 
 async function connect() {
   await chatStore.connect(username.value)
-  await router.push(`/rooms?username=${username.value}`)
+  await router.push(`/rooms`)
 }
 </script>
 

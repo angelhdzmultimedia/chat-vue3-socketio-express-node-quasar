@@ -31,11 +31,11 @@ function handleSendButtonClick() {
 
 // Life Cycle Hooks
 
-onMounted(async () => {
-   alert(`ROOM NAME: ${room.value}`)
-   await chatStore.getUsers()
-   await chatStore.joinRoom(room.value)
 
+onMounted(async () => {
+  await chatStore.joinRoom()
+  await chatStore.getUsers()
+   
   chatStore.subscribe('broadcast', (message) => {
     messages.value.push({
       type: 'message',
@@ -86,7 +86,12 @@ onMounted(async () => {
       overlay
       bordered
     >
-
+          <q-spinner
+      v-if="chatStore.isUsersLoading"
+      color="primary"
+      size="3em"
+    ></q-spinner>
+      <div v-else>
       <span class="text-h6">Users {{chatStore.users.length}}/100</span>
       <span class="text-grey" v-if="!chatStore.users.length">{{'<Empty>'}}</span>
       <q-list v-else>
@@ -94,6 +99,7 @@ onMounted(async () => {
           {{ user.name }}
         </q-item>
       </q-list>
+      </div>
     </q-drawer>
 
     <q-page-container>
@@ -104,7 +110,7 @@ onMounted(async () => {
             <span class="text-bold text-primary">{{ chatStore.user.name }}</span></span
           >
 
-          <span class="text-h4 text-primary">{{ chatStore.user.room.name }}</span>
+          <span class="text-h4 text-primary">{{ chatStore.user.room?.name }}</span>
           <q-btn flat color="white" @click="toggleUsersList" label="Users List"></q-btn>
         </div>
         <q-list

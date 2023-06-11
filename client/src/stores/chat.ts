@@ -24,23 +24,35 @@ export const useChatStore = defineStore('chat', () => {
   const user = ref<User>({})
   const isRoomsLoading = ref(false)
   const isUsersLoading = ref(false)
+  const _room = ref('')
+  const joined = ref(false)
 
   function connect(username: string) {
     emit('newConnect', { user: username }, (message) => {
       user.value = { ...message }
+      isConnected.value = true
     })
+  }
+
+  async function setRoom(room: string) {
+    _room.value = room
   }
 
   function emit(event: MessageType, ...args: any[]) {
     chat.value.emit(event, ...args)
   }
 
-  function joinRoom(roomName: string) {
+  function joinRoom() {
     return new Promise((resolve) => {
-      emit('joinRoom', { room: roomName, user: user.value.name }, (message) => {
-        user.value.room = message.room
-        resolve(null)
-      })
+      emit(
+        'joinRoom',
+        { room: _room.value, user: user.value.name },
+        (message) => {
+          user.value.room = message.room
+          joined.value = true
+          resolve(null)
+        },
+      )
     })
   }
 
@@ -77,11 +89,13 @@ export const useChatStore = defineStore('chat', () => {
     emit('newMessage', {
       text,
       user: user.value.name,
-      room: user.value.room.name,
+      room: user.value.room?.name,
     })
   }
 
   return {
+    joined,
+    setRoom,
     sendMessage,
     joinRoom,
     chat,

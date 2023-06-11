@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../pages/index.vue'
+import { useChatStore } from '../stores/chat'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,6 +22,14 @@ export const router = createRouter({
       props: true,
     },
   ],
+})
+
+router.beforeResolve((to) => {
+  const chatStore = useChatStore()
+
+  if (to.path.startsWith('/room') && !chatStore.isConnected) {
+    return '/'
+  }
 })
 
 export default router
