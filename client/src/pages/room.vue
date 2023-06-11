@@ -3,13 +3,10 @@ import { router } from '../router'
 import { ref, onMounted, nextTick, onUpdated } from 'vue'
 import { useChatStore } from '../stores/chat'
 import { useSoundStore } from '../stores/sound'
-import {useRoute} from 'vue-router'
 
 const soundStore = useSoundStore()
 const chatStore = useChatStore()
 const message = ref('')
-const route = useRoute()
-const room = ref(route.params.room)
 const messages = ref([])
 const messagesList = ref(null)
 const leftDrawerOpen = ref(false)
@@ -33,9 +30,6 @@ function handleSendButtonClick() {
 
 
 onMounted(async () => {
-  await chatStore.joinRoom()
-  await chatStore.getUsers()
-   
   chatStore.subscribe('broadcast', (message) => {
     messages.value.push({
       type: 'message',
@@ -49,7 +43,7 @@ onMounted(async () => {
     }
   })
 
-  chatStore.subscribe('userJoined', (message) => {
+  chatStore.subscribe('userJoined', async (message) => {
     messages.value.push({
       type: 'notify',
       ...message,
@@ -61,9 +55,11 @@ onMounted(async () => {
     if (message.user !== chatStore.user.name) {
       soundStore.play('userJoined')
     }
+
+    await chatStore.getUsers()
   })
 
-  chatStore.subscribe('userLeft', (message) => {
+  chatStore.subscribe('userLeft', async (message) => {
     messages.value.push({
       type: 'notify',
       ...message,
@@ -73,7 +69,13 @@ onMounted(async () => {
     if (message.user !== chatStore.user.name) {
       soundStore.play('userLeft')
     }
+
+    await chatStore.getUsers()
   })
+
+  await soundStore.load()
+  await chatStore.joinRoom()
+  await chatStore.getUsers()  
 })
 </script>
 

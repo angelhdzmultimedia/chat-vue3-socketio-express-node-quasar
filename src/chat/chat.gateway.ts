@@ -32,8 +32,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     return this._users.find((item) => item.name === name)
   }
 
-  // Evento cuando un socket se desconecta por cualquier razon
-  public handleDisconnect(socket: Socket) {
+  private _userLeft(socket: Socket) {
     const user = this._findUserById(socket.id)
 
     if (!user || !user.room) {
@@ -56,6 +55,19 @@ export class ChatGateway implements OnGatewayDisconnect {
 
     // Eliminar usuario del array de usuarios
     this._users.splice(this._users.indexOf(user), 1)
+  }
+
+  // Evento cuando un socket se desconecta por cualquier razon
+  public handleDisconnect(socket: Socket) {
+    this._userLeft(socket)
+  }
+
+  @SubscribeMessage<MessageType>('userLeft')
+  public userLeft(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() payload: JoinRoomPayload,
+  ) {
+    this._userLeft(socket)
   }
 
   @SubscribeMessage<MessageType>('canJoin')
@@ -127,7 +139,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: JoinRoomPayload,
   ): { room: Room } {
-    Logger.log(`[New Message - joinRoom]: ${payload}`)
+    Logger.log(`[New Message - joinRoom]: ${payload.room}`)
     socket.join(payload.room)
     // Emitir evento "userJoined" a los sockets cliente que estan en la sala
     this.server.to(payload.room).emit('userJoined', payload)

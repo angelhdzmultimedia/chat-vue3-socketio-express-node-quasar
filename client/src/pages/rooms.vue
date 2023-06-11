@@ -17,7 +17,7 @@ onMounted(async () => {
 
 async function joinRoom(room: Room) {
   await chatStore.setRoom(room.name)
-  await router.push(`/room/${room.name}`)
+  await router.push('/room')
 }
 
 async function handleRoomClick(event: MouseEvent, room: Room) {

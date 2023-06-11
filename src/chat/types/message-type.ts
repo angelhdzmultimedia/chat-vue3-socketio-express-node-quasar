@@ -5,5 +5,6 @@ export const messageTypes = [
   'getRooms',
   'getUsers',
   'canJoin',
+  'userLeft',
 ] as const
 export type MessageType = typeof messageTypes[number]
