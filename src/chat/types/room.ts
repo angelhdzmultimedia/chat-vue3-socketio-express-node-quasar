@@ -1,10 +1,12 @@
-export type Room = {
+export type _Room = {
   name: string
   isLocked: boolean
   password?: string
 }
 
-export const rooms: Room[] = [
+export type Room = Omit<_Room, 'password'>
+
+export const rooms: _Room[] = [
   {
     name: 'Lobby',
     isLocked: false,

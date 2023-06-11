@@ -1,4 +1,4 @@
 export type RoomAuthPayload = {
   password: string
-  roomName: string
+  room: string
 }

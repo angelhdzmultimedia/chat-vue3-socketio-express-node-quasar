@@ -1,3 +1,3 @@
 export type MessagePayload = {
-  username: string
+  user: string
 }

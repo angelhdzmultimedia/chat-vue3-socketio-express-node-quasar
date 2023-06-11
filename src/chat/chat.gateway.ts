@@ -12,14 +12,9 @@ import { JoinRoomPayload } from './types/join-room.payload'
 import { MessagePayload } from './types/message.payload'
 import { MessageType } from './types/message-type'
 import { NewMessagePayload } from './types/new-message.payload'
-import { Room, rooms } from './types/room'
+import { Room, _Room, rooms } from './types/room'
 import { RoomAuthPayload } from './types/room-auth.payload'
-
-type User = {
-  username: string
-  id: string
-  rooms: string[]
-}
+import { User } from './types/user'
 
 @WebSocketGateway({
   cors: true,
@@ -33,30 +28,32 @@ export class ChatGateway implements OnGatewayDisconnect {
     return this._users.find((item) => item.id === id)
   }
 
+  private _findUserByName(name: string) {
+    return this._users.find((item) => item.name === name)
+  }
+
   // Evento cuando un socket se desconecta por cualquier razon
-  handleDisconnect(socket: Socket) {
+  public handleDisconnect(socket: Socket) {
     const user = this._findUserById(socket.id)
 
-    if (!user) {
+    if (!user || !user.room) {
       return
     }
 
     // Crear nuevo payload
     const payload: MessagePayload = {
-      username: user.username,
+      user: user.name,
     }
 
-    // Iterar por los rooms del usuario
-    for (const room of user.rooms) {
-      // Emitir evento usuario salio de room
-      this.server.to(room).emit('userLeft', payload)
-      // Salir del room si usuario esta en room
-      if (socket.in(room)) {
-        socket.leave(room)
-      }
-      // Eliminar room del array de rooms del usuario
-      user.rooms.splice(user.rooms.indexOf(room), 1)
+    // Emitir evento usuario salio de room
+    this.server.to(user.room.name).emit('userLeft', payload)
+    // Salir del room si usuario esta en room
+    if (socket.in(user.room.name)) {
+      socket.leave(user.room.name)
     }
+    // Eliminar room del usuario
+    user.room = undefined
+
     // Eliminar usuario del array de usuarios
     this._users.splice(this._users.indexOf(user), 1)
   }
@@ -66,7 +63,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: RoomAuthPayload,
   ): boolean {
-    const room: Room = rooms.find((item) => item.name === payload.roomName)
+    const room: _Room = rooms.find((item) => item.name === payload.room)
 
     if (room.isLocked && room.password === payload.password) {
       return true
@@ -74,12 +71,21 @@ export class ChatGateway implements OnGatewayDisconnect {
     return false
   }
 
-  @SubscribeMessage<MessageType>('roomsList')
-  public roomsList(
+  @SubscribeMessage<MessageType>('getUsers')
+  public getUsers(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: {},
-  ): { rooms: Omit<Room, 'password'>[] } {
-    Logger.log(`[New Message - roomsList]: ${payload}`)
+  ) {
+    Logger.log(`[New Message - getUsers]: ${payload}`)
+    return this._users
+  }
+
+  @SubscribeMessage<MessageType>('getRooms')
+  public getRooms(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() payload: {},
+  ): { rooms: Room[] } {
+    Logger.log(`[New Message - getRooms]: ${payload}`)
 
     return {
       rooms: rooms.map((item) => ({
@@ -105,30 +111,41 @@ export class ChatGateway implements OnGatewayDisconnect {
   public newConnect(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: MessagePayload,
-  ): MessagePayload {
+  ): User {
     Logger.log(`[New Message - newConnect]: ${payload}`)
     // Añadir nuevo usuario en array de usuarios
-    this._users.push({
-      username: payload.username,
+    const user: User = {
+      name: payload.user,
       id: socket.id, // ID del socket
-      rooms: [],
-    })
-    return payload
+    }
+    this._users.push(user)
+    return user
   }
 
   @SubscribeMessage<MessageType>('joinRoom')
   public joinRoom(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: JoinRoomPayload,
-  ): JoinRoomPayload {
+  ): { room: Room } {
     Logger.log(`[New Message - joinRoom]: ${payload}`)
     socket.join(payload.room)
     // Emitir evento "userJoined" a los sockets cliente que estan en la sala
     this.server.to(payload.room).emit('userJoined', payload)
     // Buscar un usuario por su id del socket
-    const user = this._findUserById(socket.id)
+
+    const user = this._findUserByName(payload.user)
+
     // Añadir la sala al array de rooms del usuario
-    user.rooms.push(payload.room)
-    return payload
+    const room: Room | undefined = rooms
+      .map((item) => ({
+        isLocked: item.isLocked,
+        name: item.name,
+      }))
+      .find((item) => item.name === payload.room)
+    user.room = room ?? undefined
+    return {
+      room,
+    }
   }
 }
+//

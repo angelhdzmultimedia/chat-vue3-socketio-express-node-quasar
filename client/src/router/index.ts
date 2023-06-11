@@ -15,9 +15,10 @@ export const router = createRouter({
       component: () => import('../pages/rooms.vue'),
     },
     {
-      path: '/room',
+      path: '/room/:room',
       name: 'room',
       component: () => import('../pages/room.vue'),
+      props: true,
     },
   ],
 })

@@ -16,12 +16,15 @@ onMounted(async () => {
   //const data = await response.json()
   // rooms.value = data
 
-  chatStore.emit('roomsList', {}, (message) => {
-    rooms.value = message.rooms
-  })
+  chatStore.getRooms()
 })
 
 async function joinRoom(room: Room) {
+  //  await chatStore.joinRoom(room.name)
+  await router.push(`/room/${room.name}`)
+}
+
+async function handleRoomClick(event: MouseEvent, room: Room) {
   if (room.isLocked) {
     return Dialog.create({
       component: RoomAuthDialog,
@@ -36,9 +39,7 @@ async function joinRoom(room: Room) {
         },
         async (canJoin) => {
           if (canJoin) {
-            await router.push(
-              `/room?username=${route.query.username}&room=${room.name}`,
-            )
+            await router.push('/room')
           } else {
             Notify.create({
               message: "You don't have permission to join this room.",
@@ -50,9 +51,7 @@ async function joinRoom(room: Room) {
       )
     })
   }
-  return await router.push(
-    `/room?username=${route.query.username}&room=${room.name}`,
-  )
+  return await joinRoom(room)
 }
 </script>
 
@@ -65,13 +64,22 @@ async function joinRoom(room: Room) {
       }}</span></span
     >
     <span class="text-h4">Rooms</span>
-    <q-list dense class="q-gutter-y-xs">
-      <q-item class="column" v-for="(room, index) in rooms" :key="index">
+    <q-spinner
+      v-if="chatStore.isRoomsLoading"
+      color="primary"
+      size="3em"
+    ></q-spinner>
+    <q-list v-else dense class="q-gutter-y-xs">
+      <q-item
+        class="column"
+        v-for="(room, index) in chatStore.rooms"
+        :key="index"
+      >
         <q-item-section>
           <q-btn
             style="height: 60px"
             :color="room.isLocked ? 'purple' : 'primary'"
-            @click="joinRoom(room)"
+            @click="handleRoomClick($event, room)"
             :label="room.name"
             :icon="room.isLocked ? 'lock' : null"
           ></q-btn>
