@@ -14,7 +14,8 @@ const messageTypes = [
   'getUser',
   'getUsers',
   'userLeft',
-  'disconnect'
+  'disconnect',
+  'newPrivateMessage',
 ] as const
 type MessageType = typeof messageTypes[number]
 
@@ -32,6 +33,15 @@ export const useChatStore = defineStore('chat', () => {
   subscribe('disconnect', () => {
     emit('userLeft', { user: user.value.name, room: user.value.room.name })
   })
+
+  function sendPrivateMessage(text: string, receiver: string) {
+    emit('newPrivateMessage', {
+      text,
+      receiver,
+      sender: user.value.name,
+      room: user.value.room.name,
+    })
+  }
 
   function connect(username: string) {
     emit('newConnect', { user: username }, (message) => {
@@ -100,6 +110,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   return {
+    sendPrivateMessage,
     joined,
     setRoom,
     sendMessage,

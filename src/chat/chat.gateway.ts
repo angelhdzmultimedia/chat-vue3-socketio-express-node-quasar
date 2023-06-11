@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io'
 import { JoinRoomPayload } from './types/join-room.payload'
 import { MessagePayload } from './types/message.payload'
 import { MessageType } from './types/message-type'
+import { NewPrivateMessagePayload } from './types/new-private-message.payload'
 import { NewMessagePayload } from './types/new-message.payload'
 import { Room, _Room, rooms } from './types/room'
 import { RoomAuthPayload } from './types/room-auth.payload'
@@ -107,10 +108,18 @@ export class ChatGateway implements OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage<MessageType>('newPrivateMessage')
+  public newPrivateMessage(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() payload: NewMessagePayload,
+  ) {
+
+  }
+
   @SubscribeMessage<MessageType>('newMessage')
   public newMessage(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() payload: NewMessagePayload,
+    @MessageBody() payload: NewPrivateMessagePayload,
   ): NewMessagePayload {
     Logger.log(`[New Message - newMessage]: ${payload}`)
     Logger.log(`[ Rooms ]: ${socket.rooms}`)

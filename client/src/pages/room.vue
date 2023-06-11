@@ -3,6 +3,7 @@ import { router } from '../router'
 import { ref, onMounted, nextTick, onUpdated } from 'vue'
 import { useChatStore } from '../stores/chat'
 import { useSoundStore } from '../stores/sound'
+import {Dialog} from 'quasar'
 
 const soundStore = useSoundStore()
 const chatStore = useChatStore()
@@ -24,6 +25,21 @@ function toggleUsersList() {
 function handleSendButtonClick() {
   chatStore.sendMessage(message.value)
   message.value = ''
+}
+
+function handleDrawerUserClick(event: MouseEvent, user: string) {
+  Dialog.create({
+    title: 'Private Message',
+        message: `${chatStore.user.name} > ${user}:`,
+        prompt: {
+          model: '',
+          type: 'text' // optional
+        },
+        cancel: true,
+        persistent: true
+  }).onOk((message) => {
+    chatStore.sendPrivateMessage(message, user)
+  })
 }
 
 // Life Cycle Hooks
@@ -85,8 +101,9 @@ onMounted(async () => {
       class="column q-pa-lg text-center"
       v-model="leftDrawerOpen"
       side="left"
-      overlay
+    
       bordered
+      behavior="mobile"
     >
           <q-spinner
       v-if="chatStore.isUsersLoading"
@@ -99,13 +116,24 @@ onMounted(async () => {
       <q-list v-else>
         <q-item v-for="(user, index) in chatStore.users" :key="index">
           {{ user.name }}
+          <q-menu touch-position
+        context-menu>
+         <q-list dense style="min-width: 100px">
+         <q-item>
+          Context Menu
+         </q-item>
+          <q-item @click="handleDrawerUserClick($event, user.name)" v-if="user.name !== chatStore.user.name" clickable v-close-popup>
+            <q-item-section>Private Message</q-item-section>
+          </q-item>
+          </q-list>
+        </q-menu>
         </q-item>
       </q-list>
       </div>
     </q-drawer>
 
     <q-page-container>
-      <q-page class="column full-width full-height justify-between q-pa-lg">
+      <q-page  class="column full-width full-height justify-between q-pa-lg">
         <div class="column q-gutter-y-sm">
           <span
             >Connected as:
