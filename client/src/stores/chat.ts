@@ -14,6 +14,7 @@ const messageTypes = [
   'getUser',
   'getUsers',
   'userLeft',
+  'disconnect'
 ] as const
 type MessageType = typeof messageTypes[number]
 
@@ -28,7 +29,7 @@ export const useChatStore = defineStore('chat', () => {
   const _room = ref('')
   const joined = ref(false)
 
-  chat.on('disconnect', () => {
+  subscribe('disconnect', () => {
     emit('userLeft', { user: user.value.name, room: user.value.room.name })
   })
 
