@@ -16,6 +16,14 @@ onMounted(async () => {
 })
 
 async function joinRoom(room: Room) {
+  const isRoomFull: boolean = await chatStore.isRoomFull(room.name)
+  if (isRoomFull) {
+    return Notify.create({
+      message: 'Room is full!',
+      type: 'negative',
+      title: 'Room Join Error',
+    })
+  }
   await chatStore.setRoom(room.name)
   await router.push('/room')
 }
@@ -27,27 +35,24 @@ async function handleRoomClick(event: MouseEvent, room: Room) {
       cancel: true,
       persistent: true,
     }).onOk(async (password) => {
-      chatStore.emit(
-        'canJoin',
-        {
+        const canJoin: boolean = await chatStore.canJoin({
           password,
-          roomName: room.name,
-        },
-        async (canJoin) => {
-          if (canJoin) {
-            await router.push('/room')
-          } else {
+          room: room.name,
+        })
+
+        if (canJoin) {
+          joinRoom(room)
+        } else {
             Notify.create({
               message: "You don't have permission to join this room.",
               type: 'negative',
-              title: 'Unauthorized',
+              title: 'Room Join Error',
             })
           }
-        },
+        }
       )
-    })
   }
-  return await joinRoom(room)
+  joinRoom(room)
 }
 </script>
 

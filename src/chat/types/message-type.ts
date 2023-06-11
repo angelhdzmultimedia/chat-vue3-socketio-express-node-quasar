@@ -7,5 +7,6 @@ export const messageTypes = [
   'canJoin',
   'userLeft',
   'newPrivateMessage',
+  'isRoomFull',
 ] as const
 export type MessageType = typeof messageTypes[number]

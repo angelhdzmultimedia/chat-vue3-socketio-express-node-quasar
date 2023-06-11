@@ -28,6 +28,7 @@ function handleSendButtonClick() {
 }
 
 function handleDrawerUserClick(event: MouseEvent, user: string) {
+  leftDrawerOpen.value = false
   Dialog.create({
     title: 'Private Message',
         message: `${chatStore.user.name} > ${user}:`,
@@ -60,14 +61,17 @@ onMounted(async () => {
   })
 
   chatStore.subscribe('newPrivateMessage', (message) => {
-    Dialog.create({
-      title: 'New Private Message',
-      message: `${message.sender} > ${message.receiver}: ${message.text}`
-    })
+    if (message.receiver === chatStore.user.name) {
+      Dialog.create({
+        title: 'New Private Message',
+        message: `${message.sender} > ${message.receiver}: ${message.text}`
+      })
+    }
+
      messages.value.push({
-      type: 'private',
-      ...message,
-    })
+        type: 'private',
+        ...message,
+      })
 
     setTimeout(updateMessagesList, 150)
   })

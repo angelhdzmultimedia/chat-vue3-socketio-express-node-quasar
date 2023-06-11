@@ -16,6 +16,8 @@ const messageTypes = [
   'userLeft',
   'disconnect',
   'newPrivateMessage',
+  'isRoomFull',
+  'canJoin',
 ] as const
 type MessageType = typeof messageTypes[number]
 
@@ -40,6 +42,14 @@ export const useChatStore = defineStore('chat', () => {
       receiver,
       sender: user.value.name,
       room: user.value.room.name,
+    })
+  }
+
+  async function canJoin({ room, password }) {
+    return new Promise((resolve) => {
+      emit('canJoin', { password, room }, (message) => {
+        resolve(message.canJoin)
+      })
     })
   }
 
@@ -82,11 +92,19 @@ export const useChatStore = defineStore('chat', () => {
     })
   }
 
+  function isRoomFull(room: string) {
+    return new Promise((resolve) => {
+      emit('isRoomFull', { room }, (message) => {
+        resolve(message.isRoomFull)
+      })
+    })
+  }
+
   function getUsers() {
     return new Promise((resolve) => {
       isUsersLoading.value = true
       emit('getUsers', {}, (message) => {
-        users.value = [...message.users]
+        users.value = [...message.users.sort()]
         isUsersLoading.value = false
         resolve(null)
       })
@@ -110,6 +128,8 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   return {
+    isRoomFull,
+    canJoin,
     sendPrivateMessage,
     joined,
     setRoom,

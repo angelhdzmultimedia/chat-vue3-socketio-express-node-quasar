@@ -85,17 +85,31 @@ export class ChatGateway implements OnGatewayDisconnect {
     this._userLeft(socket)
   }
 
+  @SubscribeMessage<MessageType>('isRoomFull')
+  public isRoomFull(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() payload: JoinRoomPayload,
+  ): { isRoomFull: boolean } {
+    const items = this._users.filter((item) => item.room?.name === payload.room)
+    const room = rooms.find((item) => item.name === payload.room)
+
+    if (items.length >= room.maxUsers) {
+      return { isRoomFull: true }
+    }
+    return { isRoomFull: false }
+  }
+
   @SubscribeMessage<MessageType>('canJoin')
   public canJoin(
     @ConnectedSocket() socket: Socket,
     @MessageBody() payload: RoomAuthPayload,
-  ): boolean {
+  ): { canJoin: boolean } {
     const room: _Room = rooms.find((item) => item.name === payload.room)
 
     if (room.isLocked && room.password === payload.password) {
-      return true
+      return { canJoin: true }
     }
-    return false
+    return { canJoin: false }
   }
 
   @SubscribeMessage<MessageType>('getUsers')
@@ -118,6 +132,7 @@ export class ChatGateway implements OnGatewayDisconnect {
       rooms: rooms.map((item) => ({
         isLocked: item.isLocked,
         name: item.name,
+        maxUsers: item.maxUsers,
       })),
     }
   }
@@ -128,18 +143,27 @@ export class ChatGateway implements OnGatewayDisconnect {
     @MessageBody() payload: NewPrivateMessagePayload,
   ) {
     Logger.log(`[ New Message - private ] ${JSON.stringify(payload)}`)
-    const user = this._findUserByName(payload.receiver)
-    Logger.log(`[User] ${JSON.stringify(user)}`)
-    if (!user) {
+    const senderUser = this._findUserByName(payload.receiver)
+    const receiverUser = this._findUserByName(payload.sender)
+    Logger.log(`[User] ${JSON.stringify(receiverUser)}`)
+    if (!receiverUser || !senderUser) {
       return
     }
-    const receiverSocket = await this._findSocketById(user.id, payload.room)
-    if (!receiverSocket) {
+
+    const receiverSocket = await this._findSocketById(
+      receiverUser.id,
+      payload.room,
+    )
+
+    const senderSocket = await this._findSocketById(senderUser.id, payload.room)
+
+    if (!receiverSocket || !senderSocket) {
       return
     }
 
     Logger.log(`[Socket] ${receiverSocket}`)
-    // receiverSocket.to(payload.room).emit('newPrivateMessage', payload)
+    receiverSocket.to(payload.room).emit('newPrivateMessage', payload)
+    senderSocket.to(payload.room).emit('newPrivateMessage', payload)
   }
 
   @SubscribeMessage<MessageType>('newMessage')
@@ -187,6 +211,7 @@ export class ChatGateway implements OnGatewayDisconnect {
       .map((item) => ({
         isLocked: item.isLocked,
         name: item.name,
+        maxUsers: item.maxUsers,
       }))
       .find((item) => item.name === payload.room)
     user.room = room ?? undefined
