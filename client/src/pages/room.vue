@@ -95,7 +95,7 @@ onMounted(async () => {
       <span class="text-h6">Users {{chatStore.users.length}}/100</span>
       <span class="text-grey" v-if="!chatStore.users.length">{{'<Empty>'}}</span>
       <q-list v-else>
-        <q-item v-for="(user, index) in users" :key="index">
+        <q-item v-for="(user, index) in chatStore.users" :key="index">
           {{ user.name }}
         </q-item>
       </q-list>
