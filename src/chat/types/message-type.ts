@@ -6,6 +6,6 @@ export const messageTypes = [
   'getUsers',
   'canJoin',
   'userLeft',
-  'newPrivateMessage'
+  'newPrivateMessage',
 ] as const
 export type MessageType = typeof messageTypes[number]

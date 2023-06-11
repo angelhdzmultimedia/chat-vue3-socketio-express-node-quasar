@@ -33,6 +33,19 @@ export class ChatGateway implements OnGatewayDisconnect {
     return this._users.find((item) => item.name === name)
   }
 
+  private _findSocketById(id: string): Socket | undefined {
+    const sockets = this.server.sockets.sockets
+    const _sockets: Socket[] = []
+
+    for (const key in sockets) {
+      if (sockets.hasOwnProperty(key)) {
+        const socket: Socket = sockets[key]
+        _sockets.push(socket)
+      }
+    }
+    return _sockets.find(item => item.id === id)
+  }
+
   private _userLeft(socket: Socket) {
     const user = this._findUserById(socket.id)
 
@@ -111,9 +124,13 @@ export class ChatGateway implements OnGatewayDisconnect {
   @SubscribeMessage<MessageType>('newPrivateMessage')
   public newPrivateMessage(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() payload: NewMessagePayload,
+    @MessageBody() payload: NewPrivateMessagePayload,
   ) {
-
+    const user = this._findUserByName(payload.receiver)
+    const receiverSocket = this._findSocketById(user.id)
+    Logger.log(`[ New Message - private ] ${JSON.stringify(payload)}`)
+    Logger.log(`[Socket] ${receiverSocket}`)
+    // receiverSocket.to(payload.room).emit('newPrivateMessage', payload)
   }
 
   @SubscribeMessage<MessageType>('newMessage')

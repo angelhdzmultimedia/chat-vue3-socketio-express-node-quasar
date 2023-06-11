@@ -3,7 +3,7 @@ import { router } from '../router'
 import { ref, onMounted, nextTick, onUpdated } from 'vue'
 import { useChatStore } from '../stores/chat'
 import { useSoundStore } from '../stores/sound'
-import {Dialog} from 'quasar'
+import {Dialog, Notify} from 'quasar'
 
 const soundStore = useSoundStore()
 const chatStore = useChatStore()
@@ -57,6 +57,19 @@ onMounted(async () => {
     if (message.user !== chatStore.user.name) {
       soundStore.play('broadcast')
     }
+  })
+
+  chatStore.subscribe('newPrivateMessage', (message) => {
+    Dialog.create({
+      title: 'New Private Message',
+      message: `${message.sender} > ${message.receiver}: ${message.text}`
+    })
+     messages.value.push({
+      type: 'private',
+      ...message,
+    })
+
+    setTimeout(updateMessagesList, 150)
   })
 
   chatStore.subscribe('userJoined', async (message) => {
@@ -156,9 +169,17 @@ onMounted(async () => {
                 {{ message.text }}
               </span>
             </div>
+
             <div v-if="message.type === 'message'">
               <span class="text-bold text-primary"
                 >{{ message.user }}:&nbsp;</span
+              >
+              <span class="text-black">{{ message.text }}</span>
+            </div>
+
+             <div v-if="message.type === 'private'">
+              <span class="text-bold text-purple"
+                >{{ message.sender }} > {{message.receiver}}:&nbsp;</span
               >
               <span class="text-black">{{ message.text }}</span>
             </div>
